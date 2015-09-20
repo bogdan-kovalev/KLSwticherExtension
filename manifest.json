@@ -1,0 +1,21 @@
+{
+  "manifest_version": 2,
+  "name": "Исправление раскладки",
+  "description": "При нажатии PauseBreak исправляет раскладку последнего слова. Shift+PauseBreak для последнего набранного текста.",
+  "version": "1.0.2",
+
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*/*"
+      ],
+      "js": [
+        "jquery-1.11.3.min.js",
+        "en_ru_table.js",
+        "ru_en_table.js",
+        "switcher.js"
+      ],
+      "run_at": "document_end"
+    }
+  ]
+}
