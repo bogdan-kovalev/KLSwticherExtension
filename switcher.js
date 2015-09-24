@@ -23,11 +23,11 @@ String.prototype.decodeHTML = function () {
 };
 
 $(function () {
-    $(document).on('click', function () {
+    /*$(document).on('click', function () {
         correctImmediately = false;
         immediateSource = null;
         _resetAll();
-    });
+    });*/
 
     $(document).on('keydown', function (e) {
         _performAction(e);
@@ -38,8 +38,9 @@ $(function () {
     });
 });
 
-function _placeCaretAtEnd(target) {
+function _placeCaretAt(target, place) {
     if ($(target).is('div')) {
+        // todo: fix place caret for div
         if (typeof window.getSelection != "undefined"
             && typeof document.createRange != "undefined") {
             var range = document.createRange();
@@ -55,7 +56,7 @@ function _placeCaretAtEnd(target) {
             textRange.select();
         }
     } else {
-        target.selectionEnd = target.selectionStart = $(target).val().length;
+        target.selectionEnd = target.selectionStart = place;
     }
 }
 
@@ -128,6 +129,8 @@ function _correctImmediately(e) {
     e.preventDefault();
 
     var targetText = _getTargetText(e.target);
+    var selectionStart = e.target.selectionStart;
+    var selectionEnd = e.target.selectionEnd;
 
     // vk dialogs workaround because of <br> in empty line
     var replacement = String.fromCharCode(immediateSource[e.charCode]);
@@ -139,10 +142,10 @@ function _correctImmediately(e) {
             )
         );
     } else {
-        _setTargetText(e.target, targetText + replacement);
+        _setTargetText(e.target, targetText.slice(0, selectionStart)+ replacement+ targetText.slice(selectionEnd));
     }
 
-    _placeCaretAtEnd(e.target);
+    _placeCaretAt(e.target, selectionStart+1);
 }
 
 function _evaluateKey(e) {
@@ -181,7 +184,7 @@ function _performAction(e) {
                     _fixLastWord(e.target);
                     _popLastWords();
                 }
-                _placeCaretAtEnd(e.target);
+                _placeCaretAt(e.target, $(e.target).val().length);
                 correctImmediately = !!immediateSource;
             } else {
                 correctImmediately = false;
