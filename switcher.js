@@ -23,11 +23,11 @@ String.prototype.decodeHTML = function () {
 };
 
 $(function () {
-    /*$(document).on('click', function () {
+    $(document).on('click', function () {
         correctImmediately = false;
         immediateSource = null;
         _resetAll();
-    });*/
+    });
 
     $(document).on('keydown', function (e) {
         _performAction(e);
