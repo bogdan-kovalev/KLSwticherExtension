@@ -11,6 +11,7 @@
       ],
       "js": [
         "jquery-1.11.3.min.js",
+        "jquery.caret.js",
         "en_ru_table.js",
         "ru_en_table.js",
         "switcher.js"
