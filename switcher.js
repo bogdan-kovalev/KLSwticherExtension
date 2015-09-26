@@ -1,19 +1,21 @@
 (function () {
+    "use strict";
+
     const BACKSPACE = 8;
     const PAUSE_BREAK = 19;
     const SPACE = 32;
     const ENTER = 13;
     const BR = '\<br\>'; // for regex
 
-    var typedText = [[]];
-    var typedTextInRu = [[]];
-    var typedTextInEn = [[]];
+    let typedText = [[]];
+    let typedTextInRu = [[]];
+    let typedTextInEn = [[]];
 
-    var correctImmediately = false;
-    var immediateSource = null;
+    let correctImmediately = false;
+    let immediateSource = null;
 
     String.prototype.decodeHTML = function () {
-        var map = {"gt": ">", "lt": "<" /* , … */};
+        let map = {"gt": ">", "lt": "<", "nbsp": " "};
         return this.replace(/&(#(?:x[0-9a-f]+|\d+)|[a-z]+);?/gi, function ($0, $1) {
             if ($1[0] === "#") {
                 return String.fromCharCode($1[1].toLowerCase() === "x" ? parseInt($1.substr(2), 16) : parseInt($1.substr(1), 10));
@@ -23,12 +25,16 @@
         });
     };
 
+    String.prototype.encodeWSpaces = function () {
+        return this.replace(/ /g, "&nbsp;");
+    };
+
     $(function () {
-        $(document).on('click', function () {
+        /*$(document).on('click', function () {
             correctImmediately = false;
             immediateSource = null;
             _resetAll();
-        });
+         });*/
 
         $(document).on('keydown', function (e) {
             _performAction(e);
@@ -41,28 +47,28 @@
 
     function _fixTyped(target) {
         if (_top(typedText).length) {
-            var fixed = _fixAllParts(_getTargetText(target));
+            let fixed = _fixAllParts(_getTargetText(target));
             _setTargetText(target, fixed);
         }
     }
 
     function _fixLastWord(target) {
-        var lastWord = _getLastWord(typedText);
-        var lastWordInRu = _getLastWord(typedTextInRu);
-        var lastWordInEn = _getLastWord(typedTextInEn);
+        let lastWord = _getLastWord(typedText);
+        let lastWordInRu = _getLastWord(typedTextInRu);
+        let lastWordInEn = _getLastWord(typedTextInEn);
         if (lastWord.length) {
-            var fixed = _replaceLastWord(_getTargetText(target), lastWord, _getCorrectFix(lastWordInRu, lastWordInEn));
+            let fixed = _replaceLastWord(_getTargetText(target), lastWord, _getCorrectFix(lastWordInRu, lastWordInEn));
             _setTargetText(target, fixed);
         }
     }
 
     function _getTargetText(target) {
-        var $target = $(target);
+        let $target = $(target);
         return $target.val() || $target.html();
     }
 
     function _setTargetText(target, text) {
-        var $target = $(target);
+        let $target = $(target);
         $target.val() ? $target.val(text) : $target.html(text);
     }
 
@@ -80,7 +86,7 @@
     }
 
     function _fixAllParts(wrongText) {
-        var fixed = wrongText;
+        let fixed = wrongText;
         typedText.forEach(function (textPart, i) {
             fixed = _replace(fixed, textPart, _getCorrectFix(typedTextInRu, typedTextInEn, i));
         });
@@ -97,7 +103,7 @@
 
     function _replaceLastWord(target, part, fix) {
         target = target.decodeHTML();
-        var w = String.fromCharCode.apply(null, part).replace(/[<>*()?]/g, "\\$&");
+        let w = String.fromCharCode.apply(null, part).replace(/[<>*()?]/g, "\\$&");
         return target.replace(
             new RegExp(w + '(?!.*' + w + ')'),
             String.fromCharCode.apply(null, fix)
@@ -107,21 +113,23 @@
     function _correctImmediately(e) {
         e.preventDefault();
 
-        var targetText = _getTargetText(e.target);
-        var selectionStart = $(e.target).caret();
-        var selectionEnd = e.target.selectionEnd || selectionStart;
+        let targetText = _getTargetText(e.target).decodeHTML();
+        let selectionStart = $(e.target).caret();
+        let selectionEnd = e.target.selectionEnd || selectionStart;
 
         // vk dialogs workaround because of <br> in empty line
-        var replacement = String.fromCharCode(immediateSource[e.charCode]);
+        let replacement = String.fromCharCode(immediateSource[e.charCode]);
         if (window.location.toString().indexOf('vk.com/im') > -1 &&
             targetText.lastIndexOf(BR) > -1 && targetText.lastIndexOf(BR) === targetText.length - BR.length) {
 
-            _setTargetText(e.target, targetText.replace(
-                    new RegExp(BR + '(?!.*' + BR + ')'), replacement
-                )
+            let text = targetText.replace(
+                new RegExp(BR + '(?!.*' + BR + ')'), replacement
+            );
+            _setTargetText(e.target, text.encodeWSpaces()
             );
         } else {
-            _setTargetText(e.target, targetText.slice(0, selectionStart) + replacement + targetText.slice(selectionEnd));
+            let text = targetText.slice(0, selectionStart) + replacement + targetText.slice(selectionEnd);
+            _setTargetText(e.target, text.encodeWSpaces());
         }
 
         $(e.target).caret(selectionStart + 1);
@@ -133,8 +141,8 @@
         if (correctImmediately) {
             _correctImmediately(e);
         } else {
-            var inRu = en_ru_table[e.charCode];
-            var inEn = ru_en_table[e.charCode];
+            let inRu = en_ru_table[e.charCode];
+            let inEn = ru_en_table[e.charCode];
 
             _top(typedText).push(e.charCode);
             _top(typedTextInRu).push(inRu);
@@ -192,7 +200,7 @@
     }
 
     function _getLastWord(src) {
-        var topPart = _top(src);
+        let topPart = _top(src);
         while (src.length > 1 && !topPart.length) {
             _popLastWords();
             topPart = _top(src);
