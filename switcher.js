@@ -26,15 +26,15 @@
     };
 
     String.prototype.encodeWSpaces = function () {
-        return this.replace(/ /g, "&nbsp;");
+        return this;
     };
 
     $(function () {
-        /*$(document).on('click', function () {
+        $(document).on('click', function () {
             correctImmediately = false;
             immediateSource = null;
             _resetAll();
-         });*/
+        });
 
         $(document).on('keydown', function (e) {
             _performAction(e);
@@ -110,44 +110,15 @@
         );
     }
 
-    function _correctImmediately(e) {
-        e.preventDefault();
-
-        let targetText = _getTargetText(e.target).decodeHTML();
-        let selectionStart = $(e.target).caret();
-        let selectionEnd = e.target.selectionEnd || selectionStart;
-
-        // vk dialogs workaround because of <br> in empty line
-        let replacement = String.fromCharCode(immediateSource[e.charCode]);
-        if (window.location.toString().indexOf('vk.com/im') > -1 &&
-            targetText.lastIndexOf(BR) > -1 && targetText.lastIndexOf(BR) === targetText.length - BR.length) {
-
-            let text = targetText.replace(
-                new RegExp(BR + '(?!.*' + BR + ')'), replacement
-            );
-            _setTargetText(e.target, text.encodeWSpaces()
-            );
-        } else {
-            let text = targetText.slice(0, selectionStart) + replacement + targetText.slice(selectionEnd);
-            _setTargetText(e.target, text.encodeWSpaces());
-        }
-
-        $(e.target).caret(selectionStart + 1);
-    }
-
     function _evaluateKey(e) {
         if (e.charCode === ENTER || e.charCode === SPACE) return;
 
-        if (correctImmediately) {
-            _correctImmediately(e);
-        } else {
-            let inRu = en_ru_table[e.charCode];
-            let inEn = ru_en_table[e.charCode];
+        let inRu = en_ru_table[e.charCode];
+        let inEn = ru_en_table[e.charCode];
 
-            _top(typedText).push(e.charCode);
-            _top(typedTextInRu).push(inRu);
-            _top(typedTextInEn).push(inEn);
-        }
+        _top(typedText).push(e.charCode);
+        _top(typedTextInRu).push(inRu);
+        _top(typedTextInEn).push(inEn);
     }
 
     function _pop(typed) {
@@ -163,21 +134,14 @@
     function _performAction(e) {
         switch (e.keyCode) {
             case PAUSE_BREAK:
-                if (!correctImmediately) {
-                    if (e.shiftKey) {
-                        _fixTyped(e.target);
-                        _resetAll();
-                    } else {
-                        _fixLastWord(e.target);
-                        _popLastWords();
-                    }
-                    $(e.target).caret(-1);
-                    correctImmediately = !!immediateSource;
+                if (e.shiftKey) {
+                    _fixTyped(e.target);
+                    _resetAll();
                 } else {
-                    correctImmediately = false;
-                    immediateSource = null;
+                    _fixLastWord(e.target);
+                    _popLastWords();
                 }
-
+                $(e.target).caret(-1);
                 break;
             case BACKSPACE:
                 _pop(typedText);
